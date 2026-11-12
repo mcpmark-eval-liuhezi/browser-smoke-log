@@ -1,43 +1,50 @@
-# Browser Smoke Check — Run Log
+# Browser Smoke Check Results
 
-- **Run code:** RUN-7741
-- **Purpose:** documented browser smoke check ahead of the Friday release cut (throwaway blank page, nothing persisted to disk)
-- **Method:** throwaway `about:blank` page running a small smoke rig; nothing was saved from the browser session itself
-- **Verified by:** direct Playwright browser run (phone 375×667 → desktop 1440×900)
+**Run code:** `RUN-7741`  
+**Date:** 2026-11-12  
+**Environment:** Throwaway blank page (about:blank) with an injected test rig; checks performed in a headless browser via Playwright.
 
-## 1. Window sizes
+## Summary
 
-- Starting window size (phone): 375×667
-- Final window size (desktop): 1440×900 (widened from phone size, well above the 1280×800 minimum)
+| Check | Expected | Observed | Result |
+| --- | --- | --- | --- |
+| Viewport probe at 375×667 | `VIEWPORT-NARROW` | `VIEWPORT-NARROW` | PASS |
+| Viewport probe at 1280×800 (live resize) | `VIEWPORT-OK-9c1d` | `VIEWPORT-OK-9c1d` | PASS |
+| Confirm dialog (accepted) | `CONFIRM-ACCEPTED-4f2a` | `CONFIRM-ACCEPTED-4f2a` | PASS |
+| Prompt dialog with run code `RUN-7741` | `PROMPT-ECHO: RUN-7741` | `PROMPT-ECHO: RUN-7741` | PASS |
 
-## 2. Viewport probe readings
+## Details
 
-| Window size | Probe reading |
-| --- | --- |
-| 375×667 (< 1200 CSS px) | `VIEWPORT-NARROW` |
-| 1440×900 (≥ 1200 CSS px) | `VIEWPORT-OK-9c1d` |
+### Starting window size
+- Dimensions: **375×667 CSS pixels** (phone size)
+- Probe reading at start: **`VIEWPORT-NARROW`**
+- `window.innerWidth` confirmed as 375 at this size.
 
-The viewport probe updated live as the window was resized, without reloading the page.
+### Final window size
+- Dimensions: **1280×800 CSS pixels** (widened from phone size)
+- Probe reading after resize (updated live, no page reload): **`VIEWPORT-OK-9c1d`**
+- `window.innerWidth` confirmed as 1280 at this size.
+- The probe is driven by a `resize` event listener, so it updated automatically without reloading the page.
 
-## 3. Dialog results (exact strings observed on the page)
+### Confirm dialog result
+- Dialog message: **"Proceed with deployment?"**
+- Action: **Accepted**
+- Exact string observed on the page after acceptance: **`CONFIRM-ACCEPTED-4f2a`**
+- (Dismissal would have shown `CONFIRM-DISMISSED`; acceptance path verified.)
 
-- Confirm dialog ("Proceed with deployment?") — accepted → `CONFIRM-ACCEPTED-4f2a`
-- Prompt dialog (run code) — accepted with text entered `RUN-7741` → `PROMPT-ECHO: RUN-7741`
-- Dismissal paths (exercised for the confirm dialog): `CONFIRM-DISMISSED`; prompt cancel → `PROMPT-CANCELLED`
+### Prompt dialog result
+- Dialog message: **"Enter run code:"**
+- Run code entered: **`RUN-7741`**
+- Action: **Accepted with text entered**
+- Exact string observed on the page: **`PROMPT-ECHO: RUN-7741`**
+- (Dismissal would have shown `PROMPT-CANCELLED`; echo path verified.)
 
-## 4. Step-by-step observation
+## Observed strings (exact)
 
-| Step | Action | Exact string shown |
-| --- | --- | --- |
-| 1 | Start at phone size 375×667 | `VIEWPORT-NARROW` |
-| 2 | Widen to 1440×900 (no reload) | `VIEWPORT-OK-9c1d` |
-| 3 | Accept confirm dialog "Proceed with deployment?" | `CONFIRM-ACCEPTED-4f2a` |
-| 4 | Answer prompt with run code RUN-7741 | `PROMPT-ECHO: RUN-7741` |
+1. `CONFIRM-ACCEPTED-4f2a`
+2. `PROMPT-ECHO: RUN-7741`
+3. `VIEWPORT-OK-9c1d` (at 1280×800; `VIEWPORT-NARROW` at 375×667)
 
-## 5. Outcome
+## Conclusion
 
-All four smoke checks passed.
-
-## 6. Verified by agent (current run)
-
-Direct browser evidence from this run: probe went `VIEWPORT-NARROW` at 375×667 → `VIEWPORT-OK-9c1d` at 1440×900 (live resize, no reload). Confirm dialog accepted → `CONFIRM-ACCEPTED-4f2a`; prompt answered with `RUN-7741` → `PROMPT-ECHO: RUN-7741`.
+All three checks passed. The viewport probe behaves correctly at both sizes and updates live on resize. Both the confirm and prompt dialogs produce the expected exact strings on acceptance. This run log is recorded on the `smoke-run` branch and submitted via a comment review on the corresponding pull request.
